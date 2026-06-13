@@ -1,40 +1,16 @@
-# Storage account, container & auth
+# Storage account
 
-Status: **current** · Last verified: 2026-06-09
+Status: **stub** · Last verified: 2026-06-13
 
-## Account
+The storage account is provisioned by `infra/main.bicep`. Its connection string is set as the `AzureWebJobsStorage` app setting on the Function App.
 
-The app uses the Function App's storage account, referenced by the
-`AzureWebJobsStorage` app setting. There is no separate database — the Parquet
-blobs are the database. Provisioned by [`infra/main.bicep`](../../infra/main.bicep).
+## Containers
 
-## Container
+| Container | Purpose |
+| --- | --- |
+| `deploymentpackage` | Function App deployment packages (managed by Azure) |
+| `data` | Application data blobs |
 
-| Container | Created by | Notes |
-| --- | --- | --- |
-| `papertrading` | assumed to exist / created out of band; populated by `GET /api/setup` | Holds all Parquet state blobs. |
+## Auth
 
-## Authentication (storage)
-
-`storage/blobs.py` connects with
-`BlobServiceClient.from_connection_string(AzureWebJobsStorage)`, so
-`AzureWebJobsStorage` must be a **full connection string**.
-
-> ⚠️ On Flex Consumption the platform can use *identity-based*
-> `AzureWebJobsStorage` (`AzureWebJobsStorage__accountName` + managed identity)
-> instead of a connection string. The connection-string path above would not
-> work in that mode — keep this in mind if you change storage auth.
-
-## Blob naming & formats
-
-All blobs are Parquet (Polars `write_parquet`):
-
-`portfolio.parquet`, `trades.parquet`, `watchlist.parquet`,
-`agent_log.parquet`, `prices_cache.parquet`, `cash_ledger.parquet`,
-`benchmark.parquet`, `finnhub_usage.parquet`.
-
-## Local emulation
-
-For local dev, point `AzureWebJobsStorage` at Azurite or a real dev storage
-account, then call `GET /api/setup` to materialize the Parquet blobs. The
-[samples/](samples/) CSVs can be converted to Parquet to seed realistic state.
+The Function App uses the `AzureWebJobsStorage` connection string (storage account key). For local dev, use Azurite (`UseDevelopmentStorage=true`) or a real connection string in `local.settings.json`.

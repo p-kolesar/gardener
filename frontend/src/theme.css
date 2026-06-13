@@ -1,0 +1,32 @@
+:root {
+  --bg: #0d1117;
+  --bg-elev: #161b22;
+  --border: #2a3038;
+  --text: #e6edf3;
+  --text-dim: #8b949e;
+  --accent: #58a6ff;
+  --pos: #3fb950;
+  --neg: #f85149;
+  --radius: 10px;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.app { max-width: 960px; margin: 0 auto; padding: 40px 24px; }
+
+.app-header h1 { font-size: 24px; margin: 0 0 16px; font-weight: 600; }
+
+.health { color: var(--text-dim); }
+.health .ok { color: var(--pos); font-weight: 600; }
+.health .unreachable { color: var(--neg); font-weight: 600; }

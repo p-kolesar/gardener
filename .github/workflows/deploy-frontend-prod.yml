@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - "frontend-prod/**"
+      - "frontend/**"
       - ".github/workflows/deploy-frontend-prod.yml"
   workflow_dispatch:
 
@@ -13,7 +13,7 @@ permissions:
 
 env:
   AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
-  APP_DIR: frontend-prod
+  APP_DIR: frontend
 
 jobs:
   deploy:
