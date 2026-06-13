@@ -1,5 +1,5 @@
 const API_BASE = import.meta.env.VITE_API_BASE ?? "";
-const TIMEOUT_MS = 12000;
+const TIMEOUT_MS = 5000;
 const MAX_RETRIES = 3;
 
 async function fetchWithRetry(url, options = {}) {
