@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "PowerShell(& \"c:\\\\Users\\\\p.kolesar\\\\code\\\\gardener\\\\backend\\\\.venv\\\\Scripts\\\\python.exe\" -m pip install -r \"c:\\\\Users\\\\p.kolesar\\\\code\\\\gardener\\\\backend\\\\requirements.txt\")"
+      "PowerShell(& \"c:\\\\Users\\\\p.kolesar\\\\code\\\\gardener\\\\backend\\\\.venv\\\\Scripts\\\\python.exe\" -m pip install -r \"c:\\\\Users\\\\p.kolesar\\\\code\\\\gardener\\\\backend\\\\requirements.txt\")",
+      "Bash(dir /s /b *.py)",
+      "Bash(findstr /v \".venv\")",
+      "Bash(findstr /v \"node_modules\")"
     ]
   }
 }
