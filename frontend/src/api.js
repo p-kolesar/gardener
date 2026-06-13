@@ -9,3 +9,14 @@ async function get(path) {
 export async function getHealth() {
   return get("/health");
 }
+
+export async function transcribeAudio(blob, lang) {
+  const langCode = lang.split("-")[0];
+  const res = await fetch(`${API_BASE}/transcribe?lang=${langCode}`, {
+    method: "POST",
+    headers: { "Content-Type": blob.type || "audio/webm" },
+    body: blob,
+  });
+  if (!res.ok) throw new Error(`transcribe -> ${res.status}`);
+  return res.json();
+}

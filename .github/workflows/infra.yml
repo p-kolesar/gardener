@@ -43,9 +43,11 @@ jobs:
         uses: azure/cli@v2
         env:
           CLAUDE_API_KEY: ${{ secrets.CLAUDE_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         with:
           inlineScript: |
             : "${CLAUDE_API_KEY:?CLAUDE_API_KEY secret is empty — add it under repo Settings → Secrets and variables → Actions}"
+            : "${OPENAI_API_KEY:?OPENAI_API_KEY secret is empty — add it under repo Settings → Secrets and variables → Actions}"
             outputs=$(az deployment group create \
               --resource-group "$AZURE_RESOURCE_GROUP" \
               --name "infra-$GITHUB_RUN_NUMBER" \
@@ -53,6 +55,7 @@ jobs:
               --parameters infra/main.parameters.json \
               --parameters baseName="$AZURE_BASE_NAME" \
               --parameters claudeApiKey="$CLAUDE_API_KEY" \
+              --parameters openaiApiKey="$OPENAI_API_KEY" \
               --query properties.outputs -o json)
 
             funcName=$(echo "$outputs" | jq -r '.functionAppName.value')

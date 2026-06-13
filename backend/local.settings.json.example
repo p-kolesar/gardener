@@ -1,8 +1,10 @@
 {
-  "IsEncrypt": false,
+  "IsEncrypted": false,
   "Values": {
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "python",
     "APPLICATIONINSIGHTS_CONNECTION_STRING": "",
-    "CLAUDE_API_KEY": "sk-ant-..."
+    "CLAUDE_API_KEY": "sk-ant-...",
+    "OPENAI_API_KEY": "sk-..."
   }
 }

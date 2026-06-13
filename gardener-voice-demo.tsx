@@ -1,6 +1,7 @@
-import { useRef, useState } from "react";
-import { transcribeAudio } from "./api.js";
+import { useState } from "react";
 
+// ---- Design tokens: "field notebook" ----
+// moss #2E4A2F, soil #6B4F3A, paper #FBFAF6, ink #21251F, marker #D8E8D0, alert #B4541E
 const S = {
   page: { minHeight: "100vh", background: "#FBFAF6", color: "#21251F", fontFamily: "'Georgia', serif", padding: "24px 16px", maxWidth: 760, margin: "0 auto" },
   mono: { fontFamily: "'Courier New', monospace" },
@@ -27,43 +28,37 @@ export default function App() {
   const [entries, setEntries] = useState([]);
   const [err, setErr] = useState(null);
   const [recording, setRecording] = useState(false);
-  const [transcribing, setTranscribing] = useState(false);
   const [lang, setLang] = useState("sk-SK");
-  const recRef = useRef(null);
+  const [recRef] = useState({ current: null });
 
-  async function toggleRecording() {
-    if (recording) {
-      recRef.current?.recorder?.stop();
-      setRecording(false);
-      return;
-    }
+  function toggleRecording() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { setErr("Tento prehliadač nepodporuje Web Speech API (skús Chrome/Edge)."); return; }
+    if (recording) { recRef.current?.stop(); setRecording(false); return; }
     setErr(null);
-    let stream;
-    try {
-      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    } catch (e) {
-      setErr("Mikrofón nedostupný: " + e.message);
-      return;
-    }
-    const chunks = [];
-    const rec = new MediaRecorder(stream);
-    rec.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
-    rec.onstop = async () => {
-      stream.getTracks().forEach(t => t.stop());
-      const blob = new Blob(chunks, { type: rec.mimeType });
-      setTranscribing(true);
-      try {
-        const { transcript } = await transcribeAudio(blob, lang);
-        setText(t => t ? t + " " + transcript : transcript);
-      } catch (e) {
-        setErr("Prepis zlyhal: " + e.message);
-      } finally {
-        setTranscribing(false);
+    const rec = new SR();
+    rec.lang = lang;
+    rec.continuous = true;
+    rec.interimResults = true;
+    let finalText = text ? text + " " : "";
+    rec.onresult = (ev) => {
+      let interim = "";
+      for (let i = ev.resultIndex; i < ev.results.length; i++) {
+        const t = ev.results[i][0].transcript;
+        if (ev.results[i].isFinal) finalText += t + " ";
+        else interim += t;
       }
+      setText((finalText + interim).trim());
     };
-    recRef.current = { recorder: rec };
-    rec.start();
-    setRecording(true);
+    rec.onerror = (ev) => {
+      setRecording(false);
+      if (ev.error === "not-allowed" || ev.error === "service-not-allowed")
+        setErr("Mikrofón zablokovaný sandboxom/permission — použi textový vstup, alebo nasaď appku vo vlastnom prostredí.");
+      else setErr("Speech error: " + ev.error);
+    };
+    rec.onend = () => setRecording(false);
+    try { rec.start(); recRef.current = rec; setRecording(true); }
+    catch (e) { setErr("Nepodarilo sa spustiť mikrofón: " + e.message); }
   }
 
   async function parseNote() {
@@ -108,16 +103,14 @@ Transcript: """${text}"""`
     } finally { setBusy(false); }
   }
 
-  const micBusy = recording || transcribing;
-
   return (
     <div style={S.page}>
       <h1 style={S.h1}>🌿 Terénny denník</h1>
-      <div style={S.sub}>Voice → structured log · hovor po slovensky alebo anglicky</div>
+      <div style={S.sub}>Voice → structured log demo · hovor po slovensky alebo anglicky</div>
 
       <div style={S.card}>
         <div style={{ fontSize: 13, color: "#6B4F3A", marginBottom: 8 }}>
-          Vyber vzorku alebo nahraj vlastnú hlasovú poznámku:
+          🎙️ Simulácia hlasovej poznámky (v reálnej appke: speech-to-text). Vyber vzorku alebo napíš vlastnú:
         </div>
         <div style={{ display: "flex", flexDirection: "column" }}>
           {SAMPLES.map((s, i) => (
@@ -127,17 +120,13 @@ Transcript: """${text}"""`
         <textarea style={S.ta} value={text} onChange={e => setText(e.target.value)}
           placeholder="Skončil som u pána Kováča, 3 hodiny, strihanie plota…" />
         <div style={{ marginTop: 10, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-          <button
-            style={{ ...S.btn, background: recording ? "#B4541E" : "#6B4F3A", opacity: transcribing ? 0.6 : 1 }}
-            onClick={toggleRecording}
-            disabled={transcribing}
-          >
-            {recording ? "■ Stop nahrávania" : transcribing ? "⏳ Prepis…" : "🎙️ Nahrať hlasom"}
+          <button style={{ ...S.btn, background: recording ? "#B4541E" : "#6B4F3A" }} onClick={toggleRecording}>
+            {recording ? "■ Stop nahrávania" : "🎙️ Nahrať hlasom"}
           </button>
-          <button style={{ ...S.ghost, marginBottom: 0 }} onClick={() => setLang(l => l === "sk-SK" ? "en-US" : "sk-SK")} disabled={micBusy}>
+          <button style={{ ...S.ghost, marginBottom: 0 }} onClick={() => setLang(l => l === "sk-SK" ? "en-US" : "sk-SK")}>
             {lang === "sk-SK" ? "🇸🇰 sk-SK" : "🇬🇧 en-US"}
           </button>
-          <button style={{ ...S.btn, opacity: (busy || micBusy) ? 0.6 : 1 }} onClick={parseNote} disabled={busy || micBusy}>
+          <button style={{ ...S.btn, opacity: busy ? 0.6 : 1 }} onClick={parseNote} disabled={busy}>
             {busy ? "Spracúvam…" : "Zapísať do denníka →"}
           </button>
         </div>

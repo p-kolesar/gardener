@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(& \"c:\\\\Users\\\\p.kolesar\\\\code\\\\gardener\\\\backend\\\\.venv\\\\Scripts\\\\python.exe\" -m pip install -r \"c:\\\\Users\\\\p.kolesar\\\\code\\\\gardener\\\\backend\\\\requirements.txt\")"
+    ]
+  }
+}

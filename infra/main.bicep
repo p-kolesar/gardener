@@ -22,6 +22,10 @@ param pythonVersion string = '3.13'
 @secure()
 param claudeApiKey string
 
+@description('OpenAI API key (passed from a GitHub secret).')
+@secure()
+param openaiApiKey string
+
 // ---- Derived names ----------------------------------------------------------
 var uniqueSuffix = uniqueString(resourceGroup().id)
 var storageAccountName = take(toLower('st${baseName}${environmentName}${uniqueSuffix}'), 24)
@@ -156,6 +160,10 @@ resource functionApp 'Microsoft.Web/sites@2024-04-01' = {
         {
           name: 'CLAUDE_API_KEY'
           value: claudeApiKey
+        }
+        {
+          name: 'OPENAI_API_KEY'
+          value: openaiApiKey
         }
       ]
       cors: {
