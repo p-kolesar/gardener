@@ -13,7 +13,13 @@ def get_client() -> BlobServiceClient:
 
 
 def upload(container: str, blob_name: str, data: bytes) -> None:
-    get_client().get_container_client(container).upload_blob(blob_name, data, overwrite=True)
+    client = get_client()
+    container_client = client.get_container_client(container)
+    try:
+        container_client.create_container()
+    except Exception:
+        pass  # already exists
+    container_client.upload_blob(blob_name, data, overwrite=True)
 
 
 def download(container: str, blob_name: str) -> bytes:

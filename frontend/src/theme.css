@@ -30,3 +30,17 @@ body {
 .health { color: var(--text-dim); }
 .health .ok { color: var(--pos); font-weight: 600; }
 .health .unreachable { color: var(--neg); font-weight: 600; }
+
+/* Mic button pulse while recording */
+@keyframes mic-pulse {
+  0%, 100% { box-shadow: 0 0 0 8px rgba(180, 84, 30, 0.18), 0 2px 12px rgba(0,0,0,0.15); }
+  50%       { box-shadow: 0 0 0 18px rgba(180, 84, 30, 0.06), 0 2px 12px rgba(0,0,0,0.15); }
+}
+.mic-pulse { animation: mic-pulse 1.4s ease-in-out infinite; }
+
+/* Countdown bar that drains left-to-right over 4 s */
+@keyframes drain {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
+}
+.drain-bar { animation: drain 4s linear forwards; }

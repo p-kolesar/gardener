@@ -18,5 +18,25 @@ export async function transcribeAudio(blob, lang) {
     body: blob,
   });
   if (!res.ok) throw new Error(`transcribe -> ${res.status}`);
-  return res.json();
+  return res.json(); // { transcript, audio_id }
+}
+
+export async function processVoice({ transcript, project_name, projects, open_todos, today, clarification_context }) {
+  const res = await fetch(`${API_BASE}/voice/process`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ transcript, project_name, projects, open_todos, today, clarification_context }),
+  });
+  if (!res.ok) throw new Error(`voice/process -> ${res.status}`);
+  return res.json(); // { confidence, clarification_question, commands }
+}
+
+export async function saveEntries(entries) {
+  const res = await fetch(`${API_BASE}/entries`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ entries }),
+  });
+  if (!res.ok) throw new Error(`entries -> ${res.status}`);
+  return res.json(); // { saved }
 }
