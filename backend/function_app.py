@@ -123,9 +123,9 @@ def patch_project(req: func.HttpRequest) -> func.HttpResponse:
 # ---------------------------------------------------------------------------
 @app.route(route="projects/{id}/query", methods=["POST"])
 def project_query(req: func.HttpRequest) -> func.HttpResponse:
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    api_key = os.environ.get("CLAUDE_API_KEY") or os.environ.get("ANTHROPIC_API_KEY")
     if not api_key:
-        return _err("ANTHROPIC_API_KEY not configured", 500)
+        return _err("CLAUDE_API_KEY not configured", 500)
     project_id = req.route_params.get("id")
     try:
         body = req.get_json()
@@ -322,9 +322,9 @@ Rules:
 
 @app.route(route="voice/process", methods=["POST"])
 def voice_process(req: func.HttpRequest) -> func.HttpResponse:
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    api_key = os.environ.get("CLAUDE_API_KEY") or os.environ.get("ANTHROPIC_API_KEY")
     if not api_key:
-        return _err("ANTHROPIC_API_KEY not configured", 500)
+        return _err("CLAUDE_API_KEY not configured", 500)
 
     try:
         body = req.get_json()
