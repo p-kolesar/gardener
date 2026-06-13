@@ -123,15 +123,11 @@ def patch_project(req: func.HttpRequest) -> func.HttpResponse:
 # ---------------------------------------------------------------------------
 @app.route(route="projects/{id}/query", methods=["POST"])
 def project_query(req: func.HttpRequest) -> func.HttpResponse:
-    api_key = os.environ.get("CLAUDE_API_KEY") or os.environ.get("ANTHROPIC_API_KEY")
-    if not api_key:
-        return _err("CLAUDE_API_KEY not configured", 500)
     project_id = req.route_params.get("id")
     try:
         body = req.get_json()
     except Exception:
         return _err("Invalid JSON", 400)
-    # "summary" = completed work; "status" = open/remaining todos
     query_type = body.get("type", "summary")
 
     projects = _read_json("data", "projects.json")
@@ -149,6 +145,9 @@ def project_query(req: func.HttpRequest) -> func.HttpResponse:
     project_todos = [t for t in todos if t.get("project_id") == project_id]
 
     if query_type == "status":
+        api_key = os.environ.get("CLAUDE_API_KEY") or os.environ.get("ANTHROPIC_API_KEY")
+        if not api_key:
+            return _err("CLAUDE_API_KEY not configured", 500)
         open_todos = [t for t in project_todos if t.get("status") == "open"]
         system_prompt = (
             f"You are a concise assistant for a gardening contractor. "
@@ -156,28 +155,54 @@ def project_query(req: func.HttpRequest) -> func.HttpResponse:
             f"Be specific about what needs to be done."
         )
         user_msg = f"Open to-dos: {json.dumps(open_todos, ensure_ascii=False)}"
-    else:
-        system_prompt = (
-            f"You are a concise assistant for a gardening contractor. "
-            f"Summarize the completed work for project '{pname}' in 2–3 sentences. "
-            f"Mention total hours and materials cost if available."
-        )
-        user_msg = f"Work log: {json.dumps(project_entries, ensure_ascii=False)}"
+        try:
+            import anthropic
+            client = anthropic.Anthropic(api_key=api_key)
+            msg = client.messages.create(
+                model="claude-sonnet-4-6",
+                max_tokens=512,
+                system=system_prompt,
+                messages=[{"role": "user", "content": user_msg}],
+            )
+            text = next(b.text for b in msg.content if b.type == "text")
+            return _ok({"response": text.strip()})
+        except Exception as e:
+            logging.error(f"project_query error: {e}")
+            return _err(str(e), 500)
 
-    try:
-        import anthropic
-        client = anthropic.Anthropic(api_key=api_key)
-        msg = client.messages.create(
-            model="claude-sonnet-4-6",
-            max_tokens=512,
-            system=system_prompt,
-            messages=[{"role": "user", "content": user_msg}],
-        )
-        text = next(b.text for b in msg.content if b.type == "text")
-        return _ok({"response": text.strip()})
-    except Exception as e:
-        logging.error(f"project_query error: {e}")
-        return _err(str(e), 500)
+    # summary — aggregate entries directly, no LLM needed
+    from collections import defaultdict
+    work_agg = defaultdict(float)
+    for e in project_entries:
+        if e.get("type") == "log_work":
+            desc = (e.get("description") or "Work").strip()
+            work_agg[desc] += float(e.get("hours") or 0)
+
+    material_agg = defaultdict(float)
+    for e in project_entries:
+        if e.get("type") == "log_material":
+            desc = (e.get("description") or "Material").strip()
+            material_agg[desc] += float(e.get("euros") or 0)
+
+    work_items = sorted(
+        [{"description": d, "hours": h} for d, h in work_agg.items() if h > 0],
+        key=lambda x: x["hours"], reverse=True
+    )[:3]
+    material_items = sorted(
+        [{"description": d, "euros": e} for d, e in material_agg.items() if e > 0],
+        key=lambda x: x["euros"], reverse=True
+    )[:3]
+
+    total_hours = sum(float(e.get("hours") or 0) for e in project_entries if e.get("type") == "log_work")
+    total_euros = sum(float(e.get("euros") or 0) for e in project_entries if e.get("type") == "log_material")
+
+    return _ok({"response": {
+        "project_name": pname,
+        "work": work_items,
+        "materials": material_items,
+        "total_hours": total_hours,
+        "total_euros": total_euros,
+    }})
 
 
 # ---------------------------------------------------------------------------

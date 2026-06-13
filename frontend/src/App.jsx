@@ -329,8 +329,8 @@ function ConfirmCard({ card, onConfirm, onDiscard, clarifyPhase, onClarify }) {
         style={{
           position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 11,
           background: bg, borderTop: `3px solid ${border}`,
-          borderRadius: "20px 20px 0 0", padding: "22px 20px 36px",
-          maxWidth: 600, margin: "0 auto",
+          borderRadius: "20px 20px 0 0", padding: "28px 26px 48px",
+          maxWidth: 720, margin: "0 auto",
           transform: visible ? "translateY(0)" : "translateY(105%)",
           transition: "transform 0.38s cubic-bezier(0.32, 0, 0.15, 1)",
           boxShadow: "0 -6px 28px rgba(0,0,0,0.14)",
@@ -343,28 +343,63 @@ function ConfirmCard({ card, onConfirm, onDiscard, clarifyPhase, onClarify }) {
         )}
 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-          <span style={{ fontWeight: 700, color: accent, fontSize: 15 }}>
-            {card.queryResult ? "📊 Project summary" : isGreen ? "✓ Got it" : "⚠ Need clarification"}
+          <span style={{ fontWeight: 700, color: accent, fontSize: 18 }}>
+            {card.queryResult ? "📊 Summary" : isGreen ? "✓ Got it" : "⚠ Need clarification"}
           </span>
           <button
-            style={{ background: "none", border: "none", color: "#999", fontSize: 20, cursor: "pointer", lineHeight: 1, padding: "0 2px" }}
+            style={{ background: "none", border: "none", color: "#999", fontSize: 26, cursor: "pointer", lineHeight: 1, padding: "0 2px" }}
             onClick={onDiscard}
           >×</button>
         </div>
 
         {card.queryResult ? (
-          <div style={{ fontSize: 14, color: "#21251F", lineHeight: 1.6, marginBottom: 16 }}>
-            {card.queryResult}
+          <div style={{ fontSize: 15, color: "#21251F", lineHeight: 1.5, marginBottom: 16 }}>
+            {typeof card.queryResult === "object" ? (
+              <>
+                <div style={{ fontWeight: 700, fontSize: 17, marginBottom: 14 }}>
+                  {card.queryResult.project_name}
+                </div>
+                {card.queryResult.work.length > 0 && (
+                  <div style={{ marginBottom: 12 }}>
+                    <div style={{ fontWeight: 600, fontSize: 12, color: "#6B6B6B", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 6 }}>Work</div>
+                    {card.queryResult.work.map((item, i) => (
+                      <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", borderBottom: "1px solid rgba(0,0,0,0.07)" }}>
+                        <span>{item.description}</span>
+                        <span style={{ fontWeight: 600, marginLeft: 12, whiteSpace: "nowrap" }}>{item.hours % 1 === 0 ? item.hours : item.hours.toFixed(1)}h</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {card.queryResult.materials.length > 0 && (
+                  <div style={{ marginBottom: 14 }}>
+                    <div style={{ fontWeight: 600, fontSize: 12, color: "#6B6B6B", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 6 }}>Materials</div>
+                    {card.queryResult.materials.map((item, i) => (
+                      <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", borderBottom: "1px solid rgba(0,0,0,0.07)" }}>
+                        <span>{item.description}</span>
+                        <span style={{ fontWeight: 600, marginLeft: 12, whiteSpace: "nowrap" }}>€{item.euros % 1 === 0 ? item.euros : item.euros.toFixed(2)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div style={{ display: "flex", justifyContent: "space-between", paddingTop: 8, borderTop: "2px solid rgba(0,0,0,0.15)", fontWeight: 700, fontSize: 15 }}>
+                  <span>Total</span>
+                  <span>
+                    {card.queryResult.total_hours % 1 === 0 ? card.queryResult.total_hours : card.queryResult.total_hours.toFixed(1)}h
+                    {card.queryResult.total_euros > 0 && ` · €${card.queryResult.total_euros % 1 === 0 ? card.queryResult.total_euros : card.queryResult.total_euros.toFixed(2)}`}
+                  </span>
+                </div>
+              </>
+            ) : card.queryResult}
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 7, marginBottom: 16 }}>
             {card.commands.length === 0
-              ? <div style={{ fontSize: 13, color: "#999", fontStyle: "italic" }}>No commands recognized</div>
+              ? <div style={{ fontSize: 15, color: "#999", fontStyle: "italic" }}>No commands recognized</div>
               : card.commands.map((cmd, i) => (
                 <div key={i} style={{
                   background: isGreen ? "rgba(46,74,47,0.07)" : "rgba(122,80,0,0.07)",
-                  borderRadius: 8, padding: "9px 12px",
-                  fontSize: 13, fontFamily: "'Courier New', monospace", color: "#21251F",
+                  borderRadius: 8, padding: "11px 14px",
+                  fontSize: 15, fontFamily: "'Courier New', monospace", color: "#21251F",
                 }}>
                   {cmdLabel(cmd)}
                 </div>
@@ -375,19 +410,19 @@ function ConfirmCard({ card, onConfirm, onDiscard, clarifyPhase, onClarify }) {
 
         {!isGreen && !card.queryResult && (
           <>
-            <div style={{ fontSize: 14, color: accent, fontWeight: 600, marginBottom: 16 }}>
+            <div style={{ fontSize: 16, color: accent, fontWeight: 600, marginBottom: 16 }}>
               {card.clarification_question}
             </div>
             <div style={{ display: "flex", gap: 8 }}>
               <button
-                style={{ flex: 1, padding: "12px 10px", borderRadius: 10, background: "#2E4A2F", color: "#FBFAF6", border: "none", fontSize: 14, cursor: "pointer", fontFamily: "'Georgia', serif" }}
+                style={{ flex: 1, padding: "14px 10px", borderRadius: 10, background: "#2E4A2F", color: "#FBFAF6", border: "none", fontSize: 16, cursor: "pointer", fontFamily: "'Georgia', serif" }}
                 onClick={onConfirm}
               >✓ Save as-is</button>
               <button
                 style={{
-                  flex: 1, padding: "12px 10px", borderRadius: 10,
+                  flex: 1, padding: "14px 10px", borderRadius: 10,
                   background: clarifyPhase === "recording" ? "#B4541E" : "#6B4F3A",
-                  color: "#FBFAF6", border: "none", fontSize: 14,
+                  color: "#FBFAF6", border: "none", fontSize: 16,
                   cursor: clarifyPhase === "transcribing" ? "not-allowed" : "pointer",
                   opacity: clarifyPhase === "transcribing" ? 0.6 : 1,
                   fontFamily: "'Georgia', serif",
@@ -398,7 +433,7 @@ function ConfirmCard({ card, onConfirm, onDiscard, clarifyPhase, onClarify }) {
                 {clarifyPhase === "recording" ? "■ Stop" : clarifyPhase === "transcribing" ? "⏳…" : "🎙 Clarify"}
               </button>
               <button
-                style={{ padding: "12px 14px", borderRadius: 10, background: "transparent", color: "#B4541E", border: "1px solid #B4541E", fontSize: 14, cursor: "pointer", fontFamily: "'Georgia', serif" }}
+                style={{ padding: "14px 16px", borderRadius: 10, background: "transparent", color: "#B4541E", border: "1px solid #B4541E", fontSize: 16, cursor: "pointer", fontFamily: "'Georgia', serif" }}
                 onClick={onDiscard}
               >Discard</button>
             </div>
@@ -406,7 +441,7 @@ function ConfirmCard({ card, onConfirm, onDiscard, clarifyPhase, onClarify }) {
         )}
 
         {isGreen && !card.queryResult && (
-          <div style={{ textAlign: "center", fontSize: 12, color: accent, opacity: 0.65, marginTop: 4 }}>
+          <div style={{ textAlign: "center", fontSize: 14, color: accent, opacity: 0.65, marginTop: 4 }}>
             Saving automatically — tap anywhere to save now
           </div>
         )}
@@ -630,7 +665,12 @@ export default function App() {
           const qtype = queryCmd.type === "get_summary" ? "summary" : "status";
           const { response } = await queryProject(project.id, qtype);
           setCard(prev => ({ ...prev, queryResult: response }));
-          if (ttsEnabled) speak(response);
+          if (ttsEnabled) {
+            const ttsText = typeof response === "object"
+              ? `${response.project_name}. Work: ${response.work.map(w => `${w.description}, ${w.hours} hours`).join(". ")}. Materials: ${response.materials.map(m => `${m.description}, ${m.euros} euros`).join(". ")}. Total: ${response.total_hours} hours, ${response.total_euros} euros.`
+              : response;
+            speak(ttsText);
+          }
         } catch (e) {
           console.error("project query failed:", e);
           setCard(null);

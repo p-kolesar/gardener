@@ -1,13 +1,38 @@
 const API_BASE = import.meta.env.VITE_API_BASE ?? "";
+const TIMEOUT_MS = 12000;
+const MAX_RETRIES = 3;
+
+async function fetchWithRetry(url, options = {}) {
+  let lastErr;
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    try {
+      const res = await fetch(url, { ...options, signal: controller.signal });
+      clearTimeout(timer);
+      // Don't retry client errors
+      if (res.status >= 400 && res.status < 500) return res;
+      if (!res.ok) throw new Error(`${res.status}`);
+      return res;
+    } catch (e) {
+      clearTimeout(timer);
+      lastErr = e;
+      if (attempt < MAX_RETRIES - 1) {
+        await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+      }
+    }
+  }
+  throw lastErr;
+}
 
 async function get(path) {
-  const res = await fetch(`${API_BASE}${path}`);
+  const res = await fetchWithRetry(`${API_BASE}${path}`);
   if (!res.ok) throw new Error(`${path} -> ${res.status}`);
   return res.json();
 }
 
 async function post(path, body) {
-  const res = await fetch(`${API_BASE}${path}`, {
+  const res = await fetchWithRetry(`${API_BASE}${path}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -17,7 +42,7 @@ async function post(path, body) {
 }
 
 async function apiPatch(path, body) {
-  const res = await fetch(`${API_BASE}${path}`, {
+  const res = await fetchWithRetry(`${API_BASE}${path}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -73,7 +98,7 @@ export async function getEntries(projectId, type) {
 
 export async function transcribeAudio(blob, lang) {
   const langCode = lang.split("-")[0];
-  const res = await fetch(`${API_BASE}/transcribe?lang=${langCode}`, {
+  const res = await fetchWithRetry(`${API_BASE}/transcribe?lang=${langCode}`, {
     method: "POST",
     headers: { "Content-Type": blob.type || "audio/webm" },
     body: blob,
@@ -85,7 +110,7 @@ export async function transcribeAudio(blob, lang) {
 export async function processVoice({
   transcript, project_name, projects, open_todos, today, clarification_context, history,
 }) {
-  const res = await fetch(`${API_BASE}/voice/process`, {
+  const res = await fetchWithRetry(`${API_BASE}/voice/process`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -97,7 +122,7 @@ export async function processVoice({
 }
 
 export async function saveEntries(entries) {
-  const res = await fetch(`${API_BASE}/entries`, {
+  const res = await fetchWithRetry(`${API_BASE}/entries`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ entries }),

@@ -15,6 +15,11 @@ Azure Function App (Python) + React SPA + Blob Storage template with Claude AI c
 - **Storage:** blobs are raw bytes written via `storage/blobs.py`. Any schema is the caller's concern.
 - The single frontend↔backend seam is [frontend/src/api.js](frontend/src/api.js).
 
+## Response behavior
+
+- **Read/query commands** (reports, summaries, status, "what's outstanding", etc.) — execute directly, no upfront acknowledgment or paraphrasing.
+- **Write/mutate commands** (logging new info, creating or updating entries) — confirm interpretation before making changes.
+
 ## General working principles
 
 ### 1. Think Before Coding
